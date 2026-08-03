@@ -14,6 +14,7 @@ README.md           Zweck, Kommando-Uebersicht, Nutzung
 TODO.md             Offene Aufgaben / geplante Kommandos
 AGENTS.md           Diese Datei
 CLAUDE.md           Symlink auf AGENTS.md (fuer Claude Code)
+docs/kontext.md     Vollstaendiger Kontext- und Uebergabestand (bei Sessionwechsel zuerst lesen)
 ```
 
 Neue Kommandos als eigene, fokussierte Skripte anlegen (ein Zweck pro Datei) und in der Kommando-Tabelle der README + in TODO.md eintragen.
