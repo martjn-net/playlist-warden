@@ -76,7 +76,10 @@ README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
   importiert `wxt/…` und ist nicht node-getestet (svelte-check + Live).
 - **Coercions/Guards** aus `utils/coerce.ts` + `utils/guards.ts` nutzen — keine per-call-site-Dubletten.
 - **Secrets** nie committen (kein Client-Secret; die Client-ID ist kein Secret). Kein `token.json`.
-- **Commit-Identitaet:** immer `mail@martjn.net` (repo-lokal via `git config user.email`).
+- **Commit-Identitaet:** immer `martjn <7610680+martjn-net@users.noreply.github.com>`
+  (repo-lokal via `git config user.email/user.name`). NICHT `mail@martjn.net`: GitHub
+  verlinkt Commits per Autor-E-Mail — diese Adresse ist aktuell einem fremden Account
+  (`github.com/martjn`) zugeordnet, die Noreply-Form des Accounts verlinkt immer korrekt.
 - **Keine Arbeits-/Firmen-Adressen** (z. B. sipgate) irgendwo im Repo — auch nicht in Historie/Commits.
 - **Public-Repo-Hygiene (repo ist seit 2026-08-05 PUBLIC):** vor jedem Push/Release auf
   Secrets pruefen — Tree **und Historie** (`git grep -I -E '<pattern>' $(git rev-list --all)`):
