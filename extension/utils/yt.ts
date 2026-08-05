@@ -252,19 +252,6 @@ export async function playlistMeta(playlistId: string, token: string): Promise<{
 
 // --- write helpers ----------------------------------------------------------
 
-export async function createPlaylist(
-  token: string,
-  title: string,
-  description: string,
-  privacy: string,
-): Promise<Record<string, unknown>> {
-  return ytRequest('POST', 'playlists', {
-    params: { part: 'snippet,status' },
-    token,
-    body: { snippet: { title, description }, status: { privacyStatus: privacy } },
-  });
-}
-
 export async function deleteItem(itemId: string, token: string): Promise<void> {
   await ytRequest('DELETE', 'playlistItems', { params: { id: itemId }, token });
 }

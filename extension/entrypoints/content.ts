@@ -12,6 +12,8 @@ interface AdderMessage {
   owner: { name: string | null; photoId: string | null };
   count: number;
   contributors: number;
+  pages?: number; // continuation requests made (0 = initial payload only)
+  truncated?: boolean; // page cap reached before the continuation chain ended
 }
 
 const BUTTON_ID = 'ytpl-copy-adders';

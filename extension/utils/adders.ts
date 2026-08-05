@@ -82,6 +82,21 @@ export function playlistItems(data: unknown): Rec[] {
   return items;
 }
 
+/**
+ * Next InnerTube continuation token, if the playlist page (or a continuation
+ * response) has more items. Found in the trailing `continuationItemRenderer`.
+ */
+export function continuationTokenOf(data: unknown): string | null {
+  for (const rend of findAll(data, 'continuationItemRenderer')) {
+    if (!isRecord(rend)) continue;
+    const ep = rend.continuationEndpoint;
+    if (!isRecord(ep)) continue;
+    const cmd = ep.continuationCommand;
+    if (isRecord(cmd) && typeof cmd.token === 'string' && cmd.token) return cmd.token;
+  }
+  return null;
+}
+
 export interface Owner {
   name: string | null;
   photoId: string | null;

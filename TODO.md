@@ -3,12 +3,8 @@
 ## Offen
 
 ### Live-Verifikation (dein Schritt — nicht headless möglich)
-- [ ] **Live-Kette testen:** als **Owner** auf eigener Playlist „Run maintenance"
-  (Checks → Cap → Prune → Shuffle), Log/Audit prüfen. Login kommt bei Bedarf
-  direkt über den Button; Consent-Screen einmal durchklicken (Testing-Modus).
-- [ ] **Redirect-URI der gepinnten ID** `lmecidnfiiphbljfiphaejhnbkmnjkdi` am
-  eingebauten OAuth-Client registrieren (damit Release-Tester signen können).
 - [ ] **Safari-Build** auf macOS (`npm run build:safari` → `xcrun safari-web-extension-converter`).
+  (Erledigt: Live-Kette getestet ✓, Redirect-URI der gepinnten ID registriert ✓)
 
 ### Publikation (Roadmap: docs/oauth-verifizierung.md)
 - [ ] martjn.net-Produktseite + Privacy **live deployen** (Cutover vom SQL-Terminal).
@@ -21,11 +17,7 @@
   `playlist-warden@martjn.net`-Gecko-ID), dann `web-ext sign`.
 
 ### Extension — offen
-- [ ] **Adder-Paging >100**: `utils/adders.ts` liest nur die vom Seiten-Payload
-  gerenderten Einträge (~erste 100). InnerTube-Continuation nachziehen, damit Cap auch
-  auf großen Playlists vollständig attribuiert.
-- [ ] **Toter Code:** `createPlaylist` in `utils/yt.ts` wird nicht genutzt → entfernen
-  (oder ein „Playlist anlegen"-Feature bauen).
+*(aktuell nichts — siehe Publikation/Live oben)*
 
 ## Erledigt
 - **M1–M5 (Kern):** Adder-Capture; Store + Regel-Editor + UI (Svelte 5); Checks-Port
@@ -48,3 +40,7 @@
   einstellbares Intervall (`autoIntervalDays`, pro Playlist, 0=aus); Buttons
   „Run maintenance" (headless-Lauf im Hintergrund) / „Open playlist";
   Re-Alert-Dedupe pro Intervall; Titel-Fetch beim Add (`yt.playlistMeta`).
+- **Adder-Paging >100:** InnerTube-Continuation im Injected-Script (gleicher
+  INNERENDPOINT wie die Seite, mit Page-Cookies; bis 50 Seiten ≈ 5k Items,
+  Safety-Cap + `truncated`-Flag, Dedupe via Map-Merge). Cap attribuiert jetzt
+  große Playlists vollständig. `createPlaylist`-Deadcode aus `yt.ts` entfernt.
