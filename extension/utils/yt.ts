@@ -237,6 +237,19 @@ export async function ownsPlaylist(playlistId: string, token: string): Promise<O
   };
 }
 
+/** One playlist's title + privacy status, or null when the playlist is not visible. */
+export async function playlistMeta(playlistId: string, token: string): Promise<{ title: string; privacy: string } | null> {
+  const data = await ytRequest('GET', 'playlists', {
+    params: { part: 'snippet,status', id: playlistId },
+    token,
+  });
+  const item = Array.isArray(data.items) && isRecord(data.items[0]) ? data.items[0] : null;
+  if (!item) return null;
+  const snip = isRecord(item.snippet) ? item.snippet : {};
+  const status = isRecord(item.status) ? item.status : {};
+  return { title: strOrNull(snip.title) ?? '', privacy: strOrNull(status.privacyStatus) ?? '' };
+}
+
 // --- write helpers ----------------------------------------------------------
 
 export async function createPlaylist(

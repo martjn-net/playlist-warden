@@ -6,6 +6,7 @@ import {
   chunk,
   entriesFromItems,
   ownsFrom,
+  playlistMeta,
   shapeStatuses,
   ytApiMessage,
   shapeVideoInfo,
@@ -104,4 +105,30 @@ test('ytApiMessage surfaces the API reason and a quota hint', () => {
     'YouTube API 401: Invalid Credentials (authError)',
   );
   assert.equal(ytApiMessage(404, 'not json'), 'YouTube API 404');
+});
+
+test('playlistMeta maps snippet+status of the first item, null when empty', async () => {
+  const origFetch = globalThis.fetch;
+  try {
+    let seenUrl = '';
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      seenUrl = String(input);
+      return new Response(
+        JSON.stringify({
+          items: [{ snippet: { title: 'Road Trip 2026' }, status: { privacyStatus: 'unlisted' } }],
+        }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    const meta = await playlistMeta('PLx1', 'tok');
+    assert.deepEqual(meta, { title: 'Road Trip 2026', privacy: 'unlisted' });
+    assert.match(seenUrl, /part=snippet%2Cstatus/);
+    assert.match(seenUrl, /id=PLx1/);
+
+    globalThis.fetch = (async () => new Response(JSON.stringify({ items: [] }), { status: 200 })) as typeof fetch;
+    assert.equal(await playlistMeta('PLx2', 'tok'), null);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
 });

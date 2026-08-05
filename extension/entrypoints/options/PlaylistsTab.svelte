@@ -1,5 +1,7 @@
 <script lang="ts">
   import { store } from '@/utils/store.ts';
+  import * as session from '@/utils/session.ts';
+  import * as yt from '@/utils/yt.ts';
   import type { PlaylistMeta, StoreData } from '@/utils/schema.ts';
 
   let {
@@ -20,10 +22,19 @@
   async function addPlaylist(): Promise<void> {
     const id = listId(newPlaylist);
     if (!id) return;
-    await store.upsertPlaylist({ id });
+    // Fetch title + privacy via the Data API when a token is available, so the
+    // card and every dropdown show the real name right away.
+    let meta: { title: string; privacy: string } | null = null;
+    try {
+      const token = await session.getToken();
+      if (token) meta = await yt.playlistMeta(id, token);
+    } catch {
+      /* signed out or API unreachable — the id still gets stored */
+    }
+    await store.upsertPlaylist(meta ? { id, title: meta.title, privacy: meta.privacy } : { id });
     newPlaylist = '';
     await reload();
-    flash('Playlist added');
+    flash(meta?.title ? 'Playlist added' : 'Playlist added — sign in to fetch the title');
   }
 
   async function savePlaylist(p: PlaylistMeta): Promise<void> {
