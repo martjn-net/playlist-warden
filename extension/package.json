@@ -1,5 +1,5 @@
 {
-  "name": "playlist-warden",
+  "name": "playlist-warden-extension",
   "description": "Playlist Warden for YouTube \u2014 fair per-contributor caps, cleanup (dead/dupes/content) and shuffle for shared playlists.",
   "private": true,
   "version": "0.1.0",

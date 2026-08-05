@@ -21,6 +21,22 @@ export default defineConfig({
     // injected.js runs in the page's MAIN world via injectScript() -> must be
     // web-accessible. WXT downlevels this to the MV2 array form for Firefox.
     web_accessible_resources: [{ resources: ['injected.js'], matches: ['*://www.youtube.com/*'] }],
+    // CWS: 128x128 artwork is 96x96 + 16px padding (see store-assets/generate-store-assets.py).
+    icons: {
+      16: 'icons/icon-16.png',
+      32: 'icons/icon-32.png',
+      48: 'icons/icon-48.png',
+      96: 'icons/icon-96.png',
+      128: 'icons/icon-128.png',
+    },
+    action: {
+      default_icon: {
+        16: 'icons/icon-16.png',
+        32: 'icons/icon-32.png',
+        48: 'icons/icon-48.png',
+        128: 'icons/icon-128.png',
+      },
+    },
     ...(browser === 'chrome' ? { key: chromeKey } : {}),
     ...(browser === 'firefox'
       ? { browser_specific_settings: { gecko: { id: 'playlist-warden@martjn.net' } } }

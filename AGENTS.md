@@ -35,7 +35,9 @@ extension/
   entrypoints/injected.ts    MAIN-World-Reader (ytInitialData)
   entrypoints/popup/         Kurzanleitung + "Open options"
   entrypoints/options/       Options-Page (Svelte 5): App.svelte (Shell) + Tabs Playlists/Rules/Log/Login
+  public/icons/              Manifest-Icons (Generator: store-assets/generate-store-assets.py)
   tests/                     node --test (coerce, adders, schema/store, checks-parity, yt/auth/overview)
+store-assets/                Icon-/Tile-Generator (Pillow), Promo-Tiles, Screenshots
 docs/extension-plan.md     Plan/Architektur/Meilensteine M1–M5
 docs/kontext.md            Kontext-/Uebergabestand (bei Sessionwechsel zuerst lesen)
 docs/oauth-verifizierung.md OAuth-„nicht überprüft"-Screen: Optionen A–D, Entscheidung (Personal use)
@@ -49,6 +51,21 @@ README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 - `npm run build` + `npm run build:firefox` — beide muessen gruen sein.
 - Live-Laeufe (Google-OAuth + echte Reads/Writes, Safari-Build) sind der **User-Schritt**.
 
+## Release erstellen (öffentliche Testbuilds via GitHub Releases)
+
+1. In `extension/package.json` die **Version bumpen** (Zip heisst dann
+   `playlist-warden-extension-<V>-chrome.zip`).
+2. Alles gruen: `npm test && npm run check && npm run build && npm run zip`.
+3. `gh release create v<V> extension/.output/playlist-warden-extension-<V>-chrome.zip \
+   --repo martjn-net/playlist-warden --title "Playlist Warden for YouTube v<V>" \
+   --notes-file <notizen.md>` (Asset austauschen: `gh release delete-asset` +
+   `gh release upload`).
+4. Die Extension-ID ist per Public-Key **gepinnt** (`wxt.config.ts`), Tester bekommen
+   alle dieselbe ID/Redirect-URI. Der private Schluessel `extension/.chrome-key.pem`
+   (gitignoriert, kuenftige Store-Signatur) darf **niemals** committet werden.
+5. Consent Screen im Testing-Modus → Fremde muessen als **Testnutzer** eingetragen
+   werden, sonst „Zugriff blockiert".
+
 ## Konventionen
 
 - **Sprache:** AI-Chat Deutsch; App-/UI-Ausgaben Englisch; Doku Deutsch; Code + Kommentare Englisch.
@@ -59,7 +76,11 @@ README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 - **Secrets** nie committen (kein Client-Secret; die Client-ID ist kein Secret). Kein `token.json`.
 - **Commit-Identitaet:** immer `mail@martjn.net` (repo-lokal via `git config user.email`).
 - **Keine Arbeits-/Firmen-Adressen** (z. B. sipgate) irgendwo im Repo — auch nicht in Historie/Commits.
-- **Keine Bilder im Repo** (Icons/Store-Assets git-ignoriert). **Keine Stubs** — nur echtes, laufendes Zeug.
+- **Icons/Store-Assets gehoeren INS Repo:** `store-assets/generate-store-assets.py`
+  (Pillow, reproduzierbar) schreibt `extension/public/icons/` (Manifest-Icons) +
+  `store-assets/` (Promo-Tiles, Screenshots). CWS-Spec: Icon-Artwork 96×96 auf
+  128×128-Canvas (16px Padding), Promo small 440×280 (Pflicht) + marquee 1400×560,
+  Screenshots 1280×800, mind. 1. **Keine Stubs** — nur echtes, laufendes Zeug.
 
 ## Kernwissen (nicht neu herleiten)
 

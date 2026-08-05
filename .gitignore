@@ -1,17 +1,6 @@
-__pycache__/
-*.pyc
+# secrets / local state — never commit
 .env
 cookies.txt
 *.cookies
 token.json
 client_secret*.json
-youtube_playlist.sqlite*
-web/config.php
-web/data/*.sqlite*
-web/data/google_jwks.json
-# keine Bilder im Repo (z. B. Playlist-Thumbnails)
-*.png
-*.jpg
-*.jpeg
-*.webp
-*.gif
