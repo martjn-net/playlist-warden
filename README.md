@@ -2,79 +2,92 @@
 
 > **Fair caps, cleanup & shuffle for shared playlists.**
 
-Browser-Extension (WXT · Chrome/Firefox/Safari, ein Codebase) für **kollaborative
-YouTube-Playlists**: setzt ein Limit *N Songs pro Person* durch, entfernt tote Links,
-Duplikate und Off-Genre-Einträge nach eigenen Regeln und mischt — **ein Klick** direkt
-auf der Playlist-Seite. Alles bleibt lokal im Browser-Profil; Schreibzugriffe laufen
-über deinen **eigenen Google-Login** und nur auf **eigenen** Playlists.
+A browser extension (WXT · Chrome/Firefox/Safari, one codebase) for **collaborative
+YouTube playlists**: enforces a limit of *N songs per person*, removes dead links,
+duplicates and off-genre entries by configurable rules, and shuffles — **one click**
+right on the playlist page. Everything stays local in the browser profile; writes go
+through **your own Google sign-in** and only ever touch playlists you **own**.
 
-## Ziel
+## Why
 
-Playlists **öffentlich, community-freundlich und demokratisch** abspielen — jeder trägt
-bei, keine Plattform-Insel. Der Knackpunkt ist die gemeinsame Basis: Menschen nutzen
-verschiedene Musikdienste (Spotify, Apple Music, Amazon Music, …), aber **fast alle
-haben einen Google-Account** → größte Schnittmenge = **YouTube**. Eine gemeinsam
-gepflegte YouTube-Playlist ist damit ideal für den öffentlichen/kollaborativen Einsatz —
-fair gedeckelt (Cap), gemischt (Shuffle) und bereinigt (Dead-Links/Duplikate/Content).
+Play music **publicly, community-friendly and democratically** — everybody contributes,
+no platform silo. The sticking point is the shared base: people use different music
+services (Spotify, Apple Music, Amazon Music, …), but **nearly everyone has a Google
+account** → the largest common denominator is **YouTube**. A collaboratively curated
+YouTube playlist is therefore ideal for public/shared use — fairly capped, shuffled,
+and cleaned (dead links/duplicates/content rules).
 
-## Was sie kann
+## What it does
 
-- **Adder-Attribution** (Alleinstellungsmerkmal): liest das „added by"-Avatarbild je
-  Video aus der eingeloggten Playlist-Seite (die Data API gibt das nicht her) → Basis
-  für den Cap pro Person.
-- **Checks** über die ganze Playlist (Data API, dein OAuth-Token): Dead/Unavailable
-  (gelöscht/privat/rejected), Duplikate, Content-Regeln (Musik-Kategorie, Age-Restricted,
-  Genre-Allow/Deny, Titel-Keyword-Blocklist, Deny-Channels, Min/Max-Dauer, Region-Block),
-  Contributor-Zählung, Owner-Check.
-- **Writes** (nur eigene Playlists, jede Aktion ins Audit/Job-Log): **Cap** (Überschuss
-  pro Person löschen), **Prune** (Duplikate + Regelverstöße), **Shuffle**.
-- **Ein-Klick-Kette** auf der Playlist-Seite: capture → checks → cap → prune → shuffle,
-  mit Fortschritts-Narration; danach lädt die Seite neu.
+- **Adder attribution** (the unique bit): reads the "added by" avatar image per video
+  from the logged-in playlist page (the Data API does not expose this) → the basis for
+  the per-person cap.
+- **Checks** across the whole playlist (Data API, your OAuth token): dead/unavailable
+  (deleted/private/rejected), duplicates, content rules (music category, age-restricted,
+  genre allow/deny, title keyword blocklist, deny-channels, min/max duration, region
+  block), contributor counts, ownership check.
+- **Writes** (only on playlists you own, every action into the audit/job log): **cap**
+  (delete per-person surplus), **prune** (duplicates + rule violations), **shuffle**.
+- **One-click chain** on the playlist page: capture → checks → cap → prune → shuffle,
+  with progress narration; the page reloads afterwards.
+- **Auto-pilot**: per-playlist interval; when the browser is running and a list is
+  overdue, a notification offers "Run maintenance" or "Open playlist".
 
-## Was sie (bewusst) nicht kann
+## What it (deliberately) doesn't do
 
-- Nur **eigene** Playlists ändern (YouTube-Regel); fremde: nur lesen/planen.
-- Adder-Attribution nur bei **kollaborativen** Playlists und nur für vom Seiten-Payload
-  gerenderte Einträge (~erste 100; keine InnerTube-Continuation für >100). Checks/Cap/
-  Prune decken die ganze Liste ab.
-- Keine Klarnamen der Contributor (YouTube liefert nur die stabile Avatar-Foto-ID + Zahl).
-- Keine Automatik/Zeitplan (nur auf Klick), kein Geräte-/Nutzer-Sync (lokal), legt keine
-  Playlists an, schaltet nichts „kollaborativ", ersetzt Einträge nicht (nur löschen).
-- API-Quota (10k Units/Tag; Delete/Reorder je ~50).
+- Only modify playlists you **own** (YouTube rule); foreign playlists: read/plan only.
+- Adder attribution only on **collaborative** playlists and only for entries rendered
+  in the page payload (~first 100; no InnerTube continuation beyond 100). Checks/cap/
+  prune always cover the full list.
+- No real names of contributors (YouTube only yields a stable avatar photo id + counts).
+- No device/user sync (local-first), it does not create playlists, does not toggle
+  "collaborative", and never replaces entries (delete only).
+- API quota: 10k units/day; a delete/reorder costs ~50 units each.
 
-## Aufbau
+## Install
+
+Release builds with install instructions:
+**[github.com/martjn-net/playlist-warden/releases](https://github.com/martjn-net/playlist-warden/releases)**
+(Chrome/Chromium: unzip → `chrome://extensions` → Developer mode → Load unpacked).
+The extension id is pinned via a public key, so every install shares the same OAuth
+redirect URI. Until Google finishes app verification, sign-in is limited to allow-listed
+test users — open an issue if you want in.
+
+## Layout
 
 ```
-extension/              Die Extension (WXT, Chrome/Firefox/Safari) — das Produkt
-docs/extension-plan.md  Plan, Architektur, Meilensteine M1–M5
-docs/kontext.md         Übergabestand (bei Sessionwechsel zuerst lesen)
-AGENTS.md               Anweisungen für LLM-Agenten
+extension/              The extension (WXT, Chrome/Firefox/Safari) — the product
+docs/extension-plan.md  Plan, architecture, milestones M1–M5
+docs/kontext.md         Hand-off context (read first when switching sessions)
+docs/oauth-verifizierung.md  OAuth verification options & publication roadmap
+docs/monetarisierung.md      Monetization research & idea catalog
+AGENTS.md               Instructions for LLM agents
 ```
 
-Extension-Details: **[extension/README.md](extension/README.md)**.
+Extension details: **[extension/README.md](extension/README.md)**.
 
-## Entwicklung & Verifikation
+## Development & verification
 
 ```bash
 cd extension
-npm install            # WXT + Deps
-npm test               # pure Unit-/Parity-Tests (node --test)
-npm run check          # svelte-check (Typen/Props)
-npm run build          # Chrome-Build  -> .output/chrome-mv3
-npm run build:firefox  # Firefox-Build -> .output/firefox-mv2
+npm install            # WXT + deps
+npm test               # pure unit/parity tests (node --test)
+npm run check          # svelte-check (types/props)
+npm run build          # Chrome build  -> .output/chrome-mv3
+npm run build:firefox  # Firefox build -> .output/firefox-mv2
 ```
 
-## Live-Setup (Google-OAuth)
+## Live setup (Google OAuth)
 
-Einmalig: am eingebauten **OAuth-Client** (Google Cloud Console) die **Redirect-URI**
-`https://<extension-id>.chromiumapp.org/` (Extension-ID siehe `chrome://extensions`)
-als *Authorized redirect URI* eintragen und den Login-Account als Testnutzer hinterlegen.
-Sign-in öffnet der „Run maintenance"-Button bei Bedarf von selbst (oder Tab **Login**).
-Danach läuft die Wartungs-Kette auf eigenen Playlists.
+One-time: on the built-in **OAuth client** (Google Cloud Console) register the
+**redirect URI** `https://<extension-id>.chromiumapp.org/` (extension id, see
+`chrome://extensions`) as an *authorized redirect URI* and add the sign-in account as
+a test user. The "Run maintenance" button opens Google sign-in on demand (or the
+**Login** tab). The chain then runs on playlists you own.
 
-**Das ist der Übergangszustand:** Redirect-URI-Registrierung + Testnutzer-Liste +
-einmalig den „nicht überprüft"-Screen durchklicken gilt nur, solange die App bei
-Google im Testing-Modus ist. Der endgültige, bequeme Google-Login (verifizierte App,
-kein Warnscreen, keine Testnutzer-Liste) ist geplant — Hintergrund, Optionen und
-Roadmap: [docs/oauth-verifizierung.md](docs/oauth-verifizierung.md). Details:
+**This is the transitional state:** redirect URI registration + test-user list +
+clicking through the "unverified app" screen only applies while the app is in Google's
+testing mode. A final, frictionless Google sign-in (verified app, no warning screen,
+no test-user list) is planned — background, options and roadmap:
+[docs/oauth-verifizierung.md](docs/oauth-verifizierung.md). Details:
 [extension/README.md](extension/README.md).

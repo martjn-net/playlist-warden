@@ -42,6 +42,7 @@ store-assets/                Icon-/Tile-Generator (Pillow), Promo-Tiles, Screens
 docs/extension-plan.md     Plan/Architektur/Meilensteine M1–M5
 docs/kontext.md            Kontext-/Uebergabestand (bei Sessionwechsel zuerst lesen)
 docs/oauth-verifizierung.md OAuth-„nicht überprüft"-Screen: Optionen A–D, Entscheidung (Personal use)
+docs/monetarisierung.md   Monetarisierungs-Deep-Research: Marktbelege (PocketTube/Guard), Rails, Free/Paid-Schnitt, Stufenplan
 README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 ```
 
