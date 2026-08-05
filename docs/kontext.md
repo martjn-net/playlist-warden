@@ -144,8 +144,8 @@ README/AGENTS/TODO umgestellt. (Historisch war das an den Live-Test gegatet.)
   **Martjn**) ist **kollaborativ**, 2 Contributor × 2 Videos (Owner Martjn + Arbeits-Account
   Avatar `AIdro_lKfCix…`) → Adder-Attribution + Cap live verifizierbar. Öffentliche
   Referenz-Playlist: `PLTwMRo-WlCUs` („Sportpark Styrum").
-- **Admin-/Test-Identitäten:** `***REMOVED***` (Arbeits-Account, Collaborator auf der
-  Test-Playlist) und `***REMOVED***`. (Das PHP-Panel-OAuth ist mit `web/` entfernt;
+- **Admin-/Test-Identitäten:** stehen im GCP-Consent-Screen (Testnutzer-Liste); aus
+  Datenschutzgruenden werden die Adressen nicht im Repo gepflegt. (Das PHP-Panel-OAuth ist mit `web/` entfernt;
   die Extension nutzt `browser.identity.launchWebAuthFlow` gegen einen eigenen Web-Client.)
 - **Repo:** `martjn-net/playlist-warden` (privat; umbenannt von `youtube-playlist-manager`),
   lokal `/home/arens/git/playlist-warden`, Branch `master`. `gh` als `martjn-net` auth.
