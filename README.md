@@ -70,5 +70,11 @@ Einmalig: am eingebauten **OAuth-Client** (Google Cloud Console) die **Redirect-
 `https://<extension-id>.chromiumapp.org/` (Extension-ID siehe `chrome://extensions`)
 als *Authorized redirect URI* eintragen und den Login-Account als Testnutzer hinterlegen.
 Sign-in öffnet der „Run maintenance"-Button bei Bedarf von selbst (oder Tab **Login**).
-Danach läuft die Wartungs-Kette auf eigenen Playlists. Details:
+Danach läuft die Wartungs-Kette auf eigenen Playlists.
+
+**Das ist der Übergangszustand:** Redirect-URI-Registrierung + Testnutzer-Liste +
+einmalig den „nicht überprüft"-Screen durchklicken gilt nur, solange die App bei
+Google im Testing-Modus ist. Der endgültige, bequeme Google-Login (verifizierte App,
+kein Warnscreen, keine Testnutzer-Liste) ist geplant — Hintergrund, Optionen und
+Roadmap: [docs/oauth-verifizierung.md](docs/oauth-verifizierung.md). Details:
 [extension/README.md](extension/README.md).

@@ -76,6 +76,12 @@ README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 - **Secrets** nie committen (kein Client-Secret; die Client-ID ist kein Secret). Kein `token.json`.
 - **Commit-Identitaet:** immer `mail@martjn.net` (repo-lokal via `git config user.email`).
 - **Keine Arbeits-/Firmen-Adressen** (z. B. sipgate) irgendwo im Repo — auch nicht in Historie/Commits.
+- **Public-Repo-Hygiene (repo ist seit 2026-08-05 PUBLIC):** vor jedem Push/Release auf
+  Secrets pruefen — Tree **und Historie** (`git grep -I -E '<pattern>' $(git rev-list --all)`):
+  `GOCSPX`, `AIza…`, `BEGIN … PRIVATE KEY`, `refresh_token`, `ya29.…` (hinter dem
+  Punkt mind. ~12 Zeichen; die Fixture `ya29.tok` ist ok). `.chrome-key.pem` ist
+  gitignoriert und bleibt es. Erwischtes Secret = sofort rotieren/widerrufen, dann
+  erst Historie bereinigen. Stand 2026-08-05: Scan sauber.
 - **Icons/Store-Assets gehoeren INS Repo:** `store-assets/generate-store-assets.py`
   (Pillow, reproduzierbar) schreibt `extension/public/icons/` (Manifest-Icons) +
   `store-assets/` (Promo-Tiles, Screenshots). CWS-Spec: Icon-Artwork 96×96 auf
