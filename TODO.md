@@ -2,23 +2,30 @@
 
 ## Offen
 
-### Contributor-Check
-- [ ] `check_playlist.py` gegen die reale Playlist `PLTwMRo-WlCUs` mit echtem API-Key testen und feststellen, ob `channelId` pro Contributor variiert oder nur den Owner liefert.
-- [ ] **Fallback-Userscript** (Tampermonkey/Greasemonkey): liest auf der eingeloggten Playlist-Seite pro Video das "hinzugefuegt von"-Element aus dem DOM, zaehlt pro Person und blendet "Person -> Anzahl (Soll: N)" ein. Noetig, falls der API-Weg nur den Owner hergibt (Exit-Code 2).
+### Live-Verifikation (dein Schritt — nicht headless möglich)
+- [ ] Google Cloud Console: **OAuth-Client „Web application"** anlegen; die im
+  **Settings-Tab** gezeigte Redirect-URI (`https://<ext-id>.chromiumapp.org/`) als
+  *Authorized redirect URI* eintragen; Client-ID im Settings-Tab speichern; „Sign in".
+- [ ] Als **Owner** auf eigener Playlist die **„Run maintenance"**-Kette live testen
+  (Checks → Cap → Prune → Shuffle), Log/Audit prüfen.
+- [ ] **Safari-Build** auf macOS (`npm run build:safari` → `xcrun safari-web-extension-converter`).
 
-### Weitere geplante Kommandos (Manager)
-- [ ] **Export**: Playlist als CSV/JSON ausgeben (Titel, Video-ID, Kanal, Hinzufuegedatum, Position).
-- [ ] **Diff**: zwei Snapshots einer Playlist vergleichen (hinzugefuegt/entfernt/verschoben).
-- [ ] **Dedupe**: doppelte Videos in einer Playlist finden (und optional entfernen -> OAuth).
-- [ ] **Dead-Link-Check**: nicht mehr verfuegbare/private Videos in einer Playlist melden.
-
-### Infrastruktur
-- [ ] OAuth-Variante fuer private/ungelistete Playlists und Schreib-Kommandos (Dedupe etc.).
-- [ ] Gemeinsame Helfer (API-Paginierung, Key-Handling) in ein Modul ziehen, sobald ein zweites Kommando existiert.
-- [ ] Optionaler `--json`-Output fuer maschinelle Weiterverarbeitung.
+### Extension — offen
+- [ ] **Adder-Paging >100**: `utils/adders.ts` liest nur die vom Seiten-Payload
+  gerenderten Einträge (~erste 100). InnerTube-Continuation nachziehen, damit Cap auch
+  auf großen Playlists vollständig attribuiert.
+- [ ] **Toter Code:** `createPlaylist` in `utils/yt.ts` wird nicht genutzt → entfernen
+  (oder ein „Playlist anlegen"-Feature bauen).
+- [ ] **Icons + Store-Assets** (git-ignoriert; Binärdateien bereitstellen).
+- [ ] **Verteilung/Listing:** Firefox self-signed **unlisted** (`web-ext sign`); Chrome
+  unlisted/Web-Store; Safari via Xcode. Store-Beschreibungstext liegt in `extension/README.md`.
 
 ## Erledigt
-
-- [x] Repo-Grundgeruest (README, AGENTS.md, CLAUDE.md-Symlink, TODO.md).
-- [x] Projekt als Playlist-Manager ausgerichtet (Kommando-Struktur).
-- [x] Kommando **Contributor-Check** (`check_playlist.py`): paginiertes Auslesen der Playlist-Items, Zaehlung pro `channelId`, Selbstdiagnose fuer den Owner-only-Fall.
+- **M1–M5 (Kern):** Adder-Capture; Store + Regel-Editor + UI (Svelte 5); Checks-Port
+  (parity-getestet); Google-OAuth + Data-API-Reads/Writes; Politur + `wxt zip`-Packaging.
+- **Ein-Klick-Wartungskette** (Content-Script → Background-Service-Worker, Port-Narration,
+  Reload). **Overview → Settings** (nur Sign-in, keine Trigger). Contributor-Namens-Mapping
+  entfernt (reine Zählung). Deep-Refactor: `utils/coerce.ts`, Options-Page in Tab-Komponenten
+  aufgeteilt, `svelte-check` eingeführt.
+- **Rebranding → „Playlist Warden for YouTube"** (Manifest/UI/Doku).
+- **PHP `web/` + Python-Helfer entfernt** — die Extension ist das Produkt.

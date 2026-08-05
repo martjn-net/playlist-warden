@@ -1,98 +1,154 @@
-# Kontext & Uebergabe
+# Kontext & Übergabe
 
-Vollstaendiger Wissensstand fuer die nahtlose Fortsetzung in einer neuen Session.
-Stand: 2026-08-03.
+Vollständiger Wissensstand für die nahtlose Fortsetzung in einer neuen Session.
+**Zuerst lesen.** Reihenfolge der Wahrheit: dieser Stand → [extension-plan.md](extension-plan.md)
+→ [../AGENTS.md](../AGENTS.md). (Das PHP-Panel `web/` und die Python-Helfer sind entfernt.)
 
-## 1. Worum geht es
+---
 
-Ausgangsfrage des Users: **"Wie kann ich ueberpruefen, dass jedes Playlist-Mitglied genau zwei Songs zu einer YouTube-Playlist hinzugefuegt hat?"**
+## 0. Stand jetzt (in einem Satz)
 
-Daraus wurde dieses Repo: ein **YouTube Playlist Manager** (Sammlung kleiner CLI-Tools). Erstes und einziges bisher implementiertes Kommando ist der **Contributor-Check** (`check_playlist.py`), der genau diese Frage beantworten soll.
+Die **Browser-Extension „Playlist Warden for YouTube"** (`extension/`, WXT,
+Chrome/Firefox/Safari; Untertitel „Fair caps, cleanup & shuffle for shared
+playlists") ist als
+100%-Ersatz der PHP-Web-App über **M1–M5 (Kern) fertig gebaut und tief refactored** —
+alles was headless verifizierbar ist, ist grün. Es fehlt nur noch der **Live-Test
+mit echtem Google-Login** (nur der User kann das). `web/` (PHP-Panel) und die
+Python-Helfer sind **entfernt** — die Extension ist das Produkt.
 
-(Randnotiz Vorgeschichte, nicht projektrelevant: Die Session begann mit einer Diskussion ueber ritualdissent.com — ein Feedback-Tool fuer Claude-Code-Nutzer. Ohne Bezug zum Projekt.)
+## 1. Was gebaut ist — Meilensteine
 
-## 2. Die konkrete Playlist
+Plan + Details: **[extension-plan.md](extension-plan.md)** (maßgeblich, enthält
+Status + bestätigte Entscheidungen). Kurzfassung:
 
-- **URL:** https://www.youtube.com/playlist?list=PLTwMRo-WlCUs
-- **Playlist-ID:** `PLTwMRo-WlCUs` (ungewoehnlich kurz, aber gueltig)
-- **Titel:** "Sportpark Styrum"
-- **Sichtbarkeit:** oeffentlich (laedt ausgeloggt nach Consent-Wall)
-- **Stats (ausgeloggt gesehen):** 4 Videos, "Keine Aufrufe", "Heute aktualisiert"
-- **Owner:** ausgeloggt nicht sichtbar
+- **M1 — Adder-Capture:** Content-Script auf `youtube.com/playlist?list=…`, Button
+  „Save adder map"; MAIN-World-Reader (`injected.ts` via `injectScript`) liest
+  `ytInitialData`; schreibt `{videoId: avatarPhotoId}` direkt in den Store.
+- **M2 — Storage + Regeln + UI:** `utils/schema.ts` (pures Modell/Normalisierung),
+  `utils/store.ts` (`wxt/storage`: playlists/rules/adderMap/audit/jobs),
+  Options-Page (Svelte 5). **Import/Export wurde auf Userwunsch wieder entfernt.**
+- **M3 — Checks:** `utils/checks.ts` = verhaltensgleicher Port von
+  `web/lib/checks.php` (dead/dupes/content + Duration-Parser, cap/shuffle/prune),
+  **Parity-Test gegen dieselben Fälle wie `web/tests/run.php`**.
+- **M4 — OAuth + Data-API:** `utils/auth.ts` (pure OAuth-Helfer) + `utils/session.ts`
+  (`browser.identity.launchWebAuthFlow`, implicit + silent-renew), `utils/yt.ts`
+  (Data-API-v3-Client token-only), `utils/overview.ts` (pure Compose der Checks+Pläne).
+- **M5 — Politur + Verteilung:** lesbare API-Fehler + Quota-Hinweis (`ytApiMessage`),
+  Error-Jobs bei Fehlern, `wxt zip` → Chrome/Firefox-Store-ZIP + AMO-Sources-ZIP.
+- **Ein-Klick-Wartungskette (aktuelle Architektur, ersetzt den Overview-Trigger):**
+  Der Button **„Run maintenance"** auf der Playlist-Seite (`content.ts`) capturet Adder
+  → stößt den **Background-Service-Worker** (`background.ts`) an, der die Kette
+  **Checks → Cap → Prune → Shuffle** ausführt (Data-API-Writes) und den Fortschritt
+  per **Port** (`utils/messages.ts`) zurück an den Button streamt. Grund: MV3-Content-
+  Scripts dürfen nicht cross-origin fetchen und haben kein `identity`. Owner-gegatet,
+  jede Aktion ins Audit/Job-Log. **Confirm-Dialog** vor den Writes.
+- **Options-Page = reine Verwaltung, KEINE Trigger:** Tabs **Playlists · Rules · Log ·
+  Settings**. „Overview" wurde zu **Settings** (nur Google-Sign-in + Client-ID).
+- **Zähl-Fix:** „adders" (= Videos) war irreführend → zeigt jetzt **distinct
+  Contributor** (+ „N videos attributed"). `adderMap` = Video→Avatar (Cap-Basis).
 
-**Die 4 Videos (Titel ~ Uploader-Kanal):**
-1. Touch Me (Extended Version) ~ Playmen Music
-2. Won't Forget You ~ SHOUSE
-3. The Glitch Mob - We Can Make The World Stop (Official Video) ~ The Glitch Mob
-4. The Crystal Method - Play For Real (Dirtyphonics Remix) (Official Video) ~ UKF Drum & Bass
+## 2. Deep-Refactor dieser Session (verhaltenserhaltend)
 
-## 3. Das technische Kernproblem (bereits untersucht)
+- **`svelte-check` eingeführt** (`npm run check`, dev-dep) → type-checkt die ganze
+  Extension inkl. `.svelte`-Props. Baseline **0/0**. Dabei 7 latente Strictness-Bugs
+  gefixt (u. a. `prunePlanRemovals`-keep, `planShuffle`-Swap, `updateJob`, explizite
+  `browser`/`defineContentScript`/`injectScript`-Imports statt Auto-Import — svelte-check
+  sah die Auto-Imports nicht). `tests/` ist per `tsconfig.exclude` aus dem Check raus.
+- **`utils/coerce.ts`** neu: kanonische Coercions (`asString/asStringOrNull/asBool/
+  asInt/asStringArray`), ersetzt die duplizierten Helfer in `schema.ts` (`toStr…` per
+  Alias-Import) und `yt.ts` (`str…`). Single source, unit-getestet.
+- **Options-Page entflochten:** aus dem ~630-Zeilen-`App.svelte` → schlanke **Shell**
+  (`App.svelte`, Tab-Routing) + **4 Tab-Komponenten** (`OverviewTab`, `PlaylistsTab`,
+  `RulesTab`, `LogTab`) mit getypten Props (`data`, `reload`,
+  `flash`, `bind:selectedPid`). Die 4 gleichartigen Overview-Tabellen → ein `{#snippet}`.
+- **Contributor→Name-Mapping entfernt** (Tab + Store-Tabelle `contributors` +
+  Content-Script-Seeding): reines Zählen reicht. Overview zählt Contributor via
+  Kanal-Spread (rawItems) + `attributed` = Größe der Adder-Map. `adderMap`
+  (Video→Avatar-Foto-ID) bleibt als Cap-Basis. `audit.contributorAvatar` bleibt.
 
-Ziel ist die **"hinzugefuegt von"-Information** pro Video. Dazu drei untersuchte Wege:
+## 3. Verifikation (Kommandos + aktuelle Zahlen)
 
-### a) Ausgeloggt / Browser-DOM (`ytInitialData`) — GEPRUEFT, negativ
-Playlist im Headless-Browser geladen (Consent per Cookie `SOCS=CAI` / `CONSENT=YES+cb` umgangen), `ytInitialData` aus dem HTML geparst. Pro Item (`playlistVideoRenderer`) sind folgende Felder da:
-`videoId, thumbnail, title, index, shortBylineText, lengthText, navigationEndpoint, setVideoId, lengthSeconds, trackingParams, isPlayable, menu, thumbnailOverlays, videoInfo`
-- `shortBylineText` = **Uploader-Kanal** des Videos (nicht wer es hinzugefuegt hat)
-- `videoInfo` = Aufrufe + Alter (z. B. "2,7 Mio. Aufrufe • vor 2 Jahren")
-- **Kein "added by"-Feld.** Ausgeloggt nicht ermittelbar.
+Im `extension/`:
+- `npm test` → **38/38 grün** (node --test, pure Logik: coerce, adders, schema/store,
+  checks-parity, yt, auth, overview).
+- `npm run check` → **0 Errors / 0 Warnings** (svelte-check).
+- `npm run build` + `npm run build:firefox` → grün (Chrome MV3, Firefox MV2).
+- `npm run zip` / `npm run zip:firefox` → ZIPs in `.output/` (~38 kB).
+- Parity-Tests decken die Check-/Plan-Logik ab (Referenz war die inzwischen entfernte PHP-Suite `web/tests/run.php`); die TS-Tests sind eigenständig.
+- UI-Smoke (headless, static server auf `.output/chrome-mv3` + Browser): Options-Page
+  mountet, Tabs **Playlists · Rules · Log · Settings** rendern + schalten. **Kette
+  (content→background), Live-OAuth/API + datenabhängige Inhalte brauchen die echte
+  Extension-Runtime → nicht headless testbar.**
 
-### b) YouTube Data API v3 (`playlistItems.list`) — Doku vs. Realitaet
-Offizielle Doku (geprueft, Stand 2026-06-01, https://developers.google.com/youtube/v3/docs/playlistItems):
-- `snippet.channelId` = *"The ID that YouTube uses to uniquely identify **the user that added the item to the playlist**."*  <- klingt exakt nach dem, was wir brauchen
-- `snippet.channelTitle` = "channel that the playlist item belongs to"
+## 4. Nächste Schritte — DA MORGEN WEITERMACHEN
 
-**ABER bekannte Diskrepanz:** In der Praxis liefert `playlistItems` fuer `channelId` haeufig den **Playlist-Owner** — fuer jeden Eintrag denselben Wert, nicht den einzelnen Beitragenden. Beleg: https://stackoverflow.com/questions/53373429/ ("a call to PlaylistItems returns the channel ID of the playlist owner").
+**A) Live-Verifikation (nur der User, nicht headless möglich):**
+1. Google Cloud Console → **OAuth-Client „Web application"** anlegen.
+2. Im **Settings-Tab** angezeigte **Redirect-URI** (`https://<extension-id>.chromiumapp.org/`)
+   als *Authorized redirect URI* eintragen. Scope ist `.../auth/youtube`.
+3. Extension laden (Chrome: entpackt aus `.output/chrome-mv3`; Firefox: `about:debugging`),
+   im **Settings-Tab** **Client-ID speichern** → „Sign in with Google".
+4. Als **Owner** auf eigener Playlist (z. B. `PLDdaIFxMU8v4`, Cap in Playlists setzen)
+   den **„Run maintenance"**-Button klicken → Kette läuft, Button erzählt, Log füllt sich.
+5. Safari-Build nur auf macOS (`npm run build:safari` → `xcrun safari-web-extension-converter`).
 
-=> **Ob der API-Weg fuer DIESE Playlist taugt, ist ungeklaert und muss empirisch getestet werden.** Genau das macht `check_playlist.py`: variieren die `channelId`s -> API-Weg funktioniert; ist alles derselbe Owner -> Exit-Code 2, API-Weg unmoeglich.
+**B) Erledigt: PHP-`web/` + Python-Helfer entfernt.** Die Extension ist das Produkt;
+README/AGENTS/TODO umgestellt. (Historisch war das an den Live-Test gegatet.)
 
-### c) Eingeloggtes DOM — der garantierte Fallback (noch nicht gebaut)
-Als Owner/Teilnehmer eingeloggt zeigt die YouTube-UI pro Video den Avatar/Namen des Hinzufuegenden. Ein Tampermonkey/Greasemonkey-Userscript kann diese Namen aus dem DOM lesen und zaehlen. Geplant, siehe TODO. Braucht Login im Browser.
+**Danach offen (Plan):** Adder-Paging >100 (InnerTube-Continuation), Icons/Store-Assets
+(binär → git-ignoriert, kein Repo-Commit), Listing-Assets.
 
-## 4. Getroffene Architektur-Entscheidungen
+## 5. Wichtige Entscheidungen / Abweichungen (nicht neu herleiten)
 
-- **Einmal-Lauf statt 24/7:** Die Verifikation ist eine punktuelle Abfrage. Ein Dauerprozess lohnt nur fuer kontinuierliches Monitoring/Enforcement (dann Watch-Modus, siehe TODO) — nicht fuer die eigentliche Frage.
-- **API-Key statt OAuth:** Fuer eine *oeffentliche* Playlist reicht ein simpler API-Key. OAuth erst noetig fuer private/ungelistete Playlists oder Schreib-Kommandos.
-- **Keine Dependencies:** Nur Python-Standardbibliothek.
-- **Manager-Struktur:** ein fokussiertes Skript pro Aufgabe; geplante Kommandos als TODO, keine leeren Stubs.
+- **OAuth = impliziter Flow + silent renew**, NICHT PKCE+Refresh: ein öffentlicher
+  Extension-Client kann das von Google am Token-Endpoint verlangte Secret nicht halten.
+  `response_type=token`, Token ~1h in `wxt/storage`, bei Ablauf `launchWebAuthFlow({interactive:false})`.
+  Cross-browser über `identity` (kein Chrome-only `getAuthToken`).
+- **`injectScript` braucht manuell `web_accessible_resources`** (in `wxt.config.ts` gesetzt);
+  `world:'MAIN'` wäre Chromium-only → daher injectScript (alle Browser, MV2+MV3).
+- **UI-Framework: Svelte 5** via `@wxt-dev/module-svelte`.
+- **Permissions minimal:** `storage`, `identity` + Hosts `*://www.youtube.com/*`,
+  `https://www.googleapis.com/*`.
+- Pure Logik (schema/checks/coerce/overview/yt-Helfer/auth-Helfer/adders) ist **ohne
+  WXT-Abhängigkeit** → läuft unter `node --test`. Browsergebundenes (`store.ts`,
+  `session.ts`) importiert `wxt/…` und ist NICHT node-getestet (svelte-check + Live).
 
-## 5. Stand des Repos
+## 6. Durable Fakten (Playlists, Auth, Konvention)
 
-- **GitHub:** martjn-net/youtube-playlist-manager (Account `martjn-net`, **privat**)
-- **Lokal:** `/home/arens/git/youtube-playlist-manager`
-- **Branch:** `master`
-- **Umbenennung:** war zuerst `youtube-playlist-contributor-check`, dann zu `youtube-playlist-manager` umgezogen.
+- **Kern-Einsicht (warum das Ganze):** Der „hinzugefügt von"-Contributor steht in
+  **keinem Textfeld** (Data API liefert für `playlistItems.snippet.channelId` nur den
+  Owner; kein InnerTube-Textfeld). Er ist NUR als **Avatar-Bild** pro Item da
+  (`thumbnailOverlayAvatarStackViewModel`, aktuelle Client-Version nötig). Die
+  ggpht-Foto-ID im Avatar-URL ist pro Konto stabil = Contributor-Schlüssel. Klarname
+  nur für den Owner (Header-Byline `by <Owner> and N other(s)`). Deshalb macht das der
+  Content-Script lokal, nicht der Server.
+- **Kollaborativ-Schalten ist NICHT automatisierbar** (nur Web-UI; kein API-Feld, kein
+  `youtubei`-Endpoint). Ohne „Collaborate" keine Adder-Avatare. Invite-Link:
+  `playlist?list=…&jct=<token>`.
+- **Test-Playlists:** `PLDdaIFxMU8v4` („Sportpark Styrum (Test)", unlisted, Kanal
+  **Martjn**) ist **kollaborativ**, 2 Contributor × 2 Videos (Owner Martjn + Arbeits-Account
+  Avatar `AIdro_lKfCix…`) → Adder-Attribution + Cap live verifizierbar. Öffentliche
+  Referenz-Playlist: `PLTwMRo-WlCUs` („Sportpark Styrum").
+- **PHP-Panel OAuth (separat vom Extension-OAuth):** Google-**Web**-Client, Redirect
+  `…/oauth2callback.php`, Login-Konten via `ALLOWED_EMAILS`/`HOSTED_DOMAIN` (deny-by-default).
+  Admin-Mails im Repo-Kontext: `***REMOVED***`, `***REMOVED***`.
+- **Repo:** `martjn-net/youtube-playlist-manager` (privat), lokal
+  `/home/arens/git/youtube-playlist-manager`, Branch `master`. `gh` als `martjn-net` auth.
+- **Sprachkonvention:** AI-Chat Deutsch; App-/Skript-Ausgaben Englisch; Doku Deutsch;
+  Code + Kommentare Englisch. **Keine Bilder im Repo** (git-ignoriert). Keine Stubs.
 
-Dateien:
-- `check_playlist.py` — Kommando Contributor-Check (implementiert, siehe unten)
-- `README.md`, `AGENTS.md`, `TODO.md`, `CLAUDE.md`(Symlink->AGENTS.md), `.gitignore`
-- `docs/kontext.md` — dieses Dokument
+## 7. Repo-Struktur (Kurz)
 
-### `check_playlist.py` — was es tut
-Paginiert `playlistItems.list?part=snippet` (50/Seite), zaehlt pro `(channelId, channelTitle)`, gibt Tabelle "Contributor -> Anzahl" mit OK/MISMATCH gegen `--expected` (Default 2).
-Selbstdiagnose: nur eine `channelId` => Owner-only-Fall gemeldet, Exit 2.
-Aufruf: `export YT_API_KEY=...; ./check_playlist.py PLTwMRo-WlCUs --expected 2`
-Exit-Codes: 0 = alle treffen Soll, 1 = Abweichung, 2 = keine Contributor-Info (nur Owner), 3 = HTTP-Fehler.
+- `extension/` — **das künftige Produkt.** `utils/` (pure Logik + Bindings), `entrypoints/`
+  (content, injected, popup, options/ mit Shell + Tab-Komponenten), `tests/` (node --test).
+  Verifikation: `npm test` + `npm run check` + `npm run build`. Doku: `extension/README.md`.
 
-### Verifikationsstand
-- Smoke-Test bestanden: Syntax-Parse OK, `--help` OK, fehlender Key wird sauber abgefangen (Exit 2 aus argparse).
-- **NOCH NICHT gegen die echte API getestet** — es lag kein API-Key vor. Das ist der erste offene Task.
+## 8. Historie (Anfangsphase, teilweise überholt)
 
-## 6. Naechste Schritte (morgen)
-
-Prioritaet 1 — **empirischer API-Test:**
-1. User besorgt YouTube Data API v3 Key (Google Cloud Console -> API aktivieren -> Key).
-2. `export YT_API_KEY=...; ./check_playlist.py PLTwMRo-WlCUs --expected 2` laufen lassen.
-3. Auswerten:
-   - Exit 0/1 (mehrere channelIds) => API-Weg funktioniert, Frage direkt beantwortet.
-   - Exit 2 (nur Owner) => Fallback-Userscript bauen (Prioritaet 2).
-
-Prioritaet 2 (falls noetig) — **Fallback-Userscript** (siehe TODO): eingeloggte Playlist-Seite, pro Zeile "hinzugefuegt von" aus dem DOM lesen, pro Person zaehlen, "Person -> Anzahl (Soll: N)" einblenden.
-
-Weitere Manager-Kommandos: Export (CSV/JSON), Diff, Dedupe, Dead-Link-Check — alle in `TODO.md`.
-
-## 7. Nuetzliche Fakten fuer die Fortsetzung
-
-- gh ist authentifiziert als `martjn-net` (Scopes u. a. `repo`, `delete_repo`, `workflow`).
-- Consent-Wall im Headless-Browser umgehbar per Cookies `SOCS=CAI` und `CONSENT=YES+cb` auf `.youtube.com`, dann `page.goto(...)`. `ytInitialData` steht im HTML als `var ytInitialData = {...};</script>` (nicht als window-Global im isolierten evaluate-Kontext -> aus `page.content()` per Regex parsen).
-- API-Endpoint: `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=...&maxResults=50&pageToken=...&key=...`
+Ursprung: Frage des Users „Hat jedes Playlist-Mitglied genau 2 Songs beigetragen?" →
+reine Python-CLI-Sammlung → PHP-Web-Panel (`web/`) → jetzt Browser-Extension. Die
+detaillierte Herleitung des Avatar-Ansatzes, der API-Diskrepanz und der verworfenen
+Wege (ausgeloggtes DOM, Data-API-`channelId`, Studio-Endpoints, Puppeteer-Profil) ist
+in AGENTS.md „Kernwissen" verdichtet. Frühere
+Fassungen dieses Dokuments trugen die Langfassung; sie ist mit dem obigen Kernwissen
+(§6) abgedeckt.

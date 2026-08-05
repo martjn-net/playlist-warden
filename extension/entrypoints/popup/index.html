@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playlist Warden for YouTube</title>
+    <style>
+      body { font: 14px/1.5 system-ui, sans-serif; margin: 0; padding: 14px; width: 300px; color: #1c1c28; }
+      button { font: inherit; font-weight: 600; background: #3ea6ff; color: #06121f; border: 0; border-radius: 16px; padding: 7px 14px; cursor: pointer; }
+      h1 { font-size: 15px; margin: 0 0 8px; }
+      p { margin: 0 0 8px; }
+      code { background: #f0f0f6; padding: 1px 4px; border-radius: 4px; }
+      .muted { color: #6b7280; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Playlist Warden</h1>
+    <p class="muted" style="margin:-4px 0 10px">Fair caps, cleanup &amp; shuffle for shared playlists</p>
+    <p>Open one of your YouTube playlists while signed in:</p>
+    <p><code>youtube.com/playlist?list=…</code></p>
+    <p>Click the <strong>“Run maintenance”</strong> button (bottom-right of the page)
+      to capture adders and run the full chain: checks → cap → prune → shuffle.
+      Progress shows on the button; results go to the Log.</p>
+    <p><button id="open-options" type="button">Open options</button></p>
+    <p class="muted">Options: Playlists · Rules · Log · Settings (Google sign-in).
+      Sign in there once before running the chain.</p>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

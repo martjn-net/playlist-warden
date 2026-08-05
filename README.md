@@ -1,62 +1,73 @@
-# youtube-playlist-manager
+# Playlist Warden for YouTube
 
-Sammlung kleiner CLI-Tools rund um **YouTube-Playlists** (YouTube Data API v3, nur Python-Standardbibliothek).
+> **Fair caps, cleanup & shuffle for shared playlists.**
 
-Das Projekt ist als Playlist-Manager angelegt: pro Aufgabe ein fokussiertes Kommando. Aktuell implementiert ist der **Contributor-Check**; weitere Kommandos (Export, Diff, Dedupe, ...) sind in [`TODO.md`](TODO.md) geplant.
+Browser-Extension (WXT · Chrome/Firefox/Safari, ein Codebase) für **kollaborative
+YouTube-Playlists**: setzt ein Limit *N Songs pro Person* durch, entfernt tote Links,
+Duplikate und Off-Genre-Einträge nach eigenen Regeln und mischt — **ein Klick** direkt
+auf der Playlist-Seite. Alles bleibt lokal im Browser-Profil; Schreibzugriffe laufen
+über deinen **eigenen Google-Login** und nur auf **eigenen** Playlists.
 
-## Kommandos
+## Ziel
 
-| Kommando | Datei | Zweck | Status |
-|----------|-------|-------|--------|
-| Contributor-Check | [`check_playlist.py`](check_playlist.py) | Zaehlt pro Mitglied die Anzahl beigetragener Videos (z. B. "jeder genau 2 Songs?") | implementiert |
+Playlists **öffentlich, community-freundlich und demokratisch** abspielen — jeder trägt
+bei, keine Plattform-Insel. Der Knackpunkt ist die gemeinsame Basis: Menschen nutzen
+verschiedene Musikdienste (Spotify, Apple Music, Amazon Music, …), aber **fast alle
+haben einen Google-Account** → größte Schnittmenge = **YouTube**. Eine gemeinsam
+gepflegte YouTube-Playlist ist damit ideal für den öffentlichen/kollaborativen Einsatz —
+fair gedeckelt (Cap), gemischt (Shuffle) und bereinigt (Dead-Links/Duplikate/Content).
 
-## Voraussetzungen
+## Was sie kann
 
-- Python 3.9+ (keine Dependencies)
-- Ein **YouTube Data API v3 Key** — fuer eine *oeffentliche* Playlist reicht ein API-Key, **kein OAuth**:
-  1. [Google Cloud Console](https://console.cloud.google.com/) -> Projekt anlegen/waehlen
-  2. "YouTube Data API v3" aktivieren
-  3. Anmeldedaten -> API-Schluessel erstellen
+- **Adder-Attribution** (Alleinstellungsmerkmal): liest das „added by"-Avatarbild je
+  Video aus der eingeloggten Playlist-Seite (die Data API gibt das nicht her) → Basis
+  für den Cap pro Person.
+- **Checks** über die ganze Playlist (Data API, dein OAuth-Token): Dead/Unavailable
+  (gelöscht/privat/rejected), Duplikate, Content-Regeln (Musik-Kategorie, Age-Restricted,
+  Genre-Allow/Deny, Titel-Keyword-Blocklist, Deny-Channels, Min/Max-Dauer, Region-Block),
+  Contributor-Zählung, Owner-Check.
+- **Writes** (nur eigene Playlists, jede Aktion ins Audit/Job-Log): **Cap** (Überschuss
+  pro Person löschen), **Prune** (Duplikate + Regelverstöße), **Shuffle**.
+- **Ein-Klick-Kette** auf der Playlist-Seite: capture → checks → cap → prune → shuffle,
+  mit Fortschritts-Narration; danach lädt die Seite neu.
 
-## Contributor-Check
+## Was sie (bewusst) nicht kann
 
-Prueft, **wie viele Videos jedes Mitglied zu einer Playlist beigetragen hat**.
+- Nur **eigene** Playlists ändern (YouTube-Regel); fremde: nur lesen/planen.
+- Adder-Attribution nur bei **kollaborativen** Playlists und nur für vom Seiten-Payload
+  gerenderte Einträge (~erste 100; keine InnerTube-Continuation für >100). Checks/Cap/
+  Prune decken die ganze Liste ab.
+- Keine Klarnamen der Contributor (YouTube liefert nur die stabile Avatar-Foto-ID + Zahl).
+- Keine Automatik/Zeitplan (nur auf Klick), kein Geräte-/Nutzer-Sync (lokal), legt keine
+  Playlists an, schaltet nichts „kollaborativ", ersetzt Einträge nicht (nur löschen).
+- API-Quota (10k Units/Tag; Delete/Reorder je ~50).
+
+## Aufbau
+
+```
+extension/              Die Extension (WXT, Chrome/Firefox/Safari) — das Produkt
+docs/extension-plan.md  Plan, Architektur, Meilensteine M1–M5
+docs/kontext.md         Übergabestand (bei Sessionwechsel zuerst lesen)
+AGENTS.md               Anweisungen für LLM-Agenten
+```
+
+Extension-Details: **[extension/README.md](extension/README.md)**.
+
+## Entwicklung & Verifikation
 
 ```bash
-export YT_API_KEY=dein_api_key
-./check_playlist.py PLTwMRo-WlCUs --expected 2
+cd extension
+npm install            # WXT + Deps
+npm test               # pure Unit-/Parity-Tests (node --test)
+npm run check          # svelte-check (Typen/Props)
+npm run build          # Chrome-Build  -> .output/chrome-mv3
+npm run build:firefox  # Firefox-Build -> .output/firefox-mv2
 ```
 
-Beispielausgabe (API liefert Contributor):
+## Live-Setup (Google-OAuth)
 
-```
-4 videos, 2 distinct contributor id(s)
-
-Alice   2  OK          [UCxxxxxxxxxxxx]
-Bob     2  OK          [UCyyyyyyyyyyyy]
-
-All contributors match.
-```
-
-### Der API-Haken
-
-Bei einer **kollaborativen** Playlist zeigt die Weboberflaeche pro Video, wer es hinzugefuegt hat. Diese Info ist:
-
-- **nicht** in den ausgeloggt geladenen Playlist-Daten enthalten, und
-- laut YouTube Data API v3 zwar dokumentiert (`playlistItems.snippet.channelId` = *"the user that added the item to the playlist"*), liefert in der Praxis aber haeufig fuer **jeden** Eintrag denselben Wert — den **Playlist-Owner** ([bekannte Diskrepanz](https://stackoverflow.com/questions/53373429/how-to-get-channel-id-of-videos-listed-in-playlistitems-in-youtube-api-v3)).
-
-Ob der API-Weg fuer eine konkrete Playlist funktioniert, ist **empirisch**. Das Kommando erkennt und meldet den Owner-only-Fall (Exit-Code 2).
-
-### Exit-Codes
-
-| Code | Bedeutung |
-|------|-----------|
-| `0`  | Alle Contributor treffen `--expected` |
-| `1`  | Mindestens ein Contributor weicht ab |
-| `2`  | API gibt keine Contributor-Info her (nur Owner) |
-| `3`  | HTTP-/API-Fehler |
-
-### Fallback: eingeloggtes DOM
-
-Gibt die API nur den Owner her (Exit-Code 2), bleibt nur der eingeloggte Weg:
-Playlist im Browser als Owner/Teilnehmer oeffnen — dort steht pro Video der Avatar/Name des Hinzufuegenden. Ein Tampermonkey-Userscript, das diese Namen ausliest und zaehlt, ist als naechster Schritt in [`TODO.md`](TODO.md) vermerkt.
+Einmalig: in der Google Cloud Console einen **OAuth-Client „Web application"** anlegen,
+die im **Settings-Tab** angezeigte Redirect-URI (`https://<extension-id>.chromiumapp.org/`)
+als *Authorized redirect URI* eintragen, Client-ID im Settings-Tab speichern, „Sign in
+with Google". Danach läuft die Wartungs-Kette auf eigenen Playlists. Details:
+[extension/README.md](extension/README.md).
