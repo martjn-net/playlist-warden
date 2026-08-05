@@ -102,6 +102,19 @@ README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 - **OAuth = impliziter Flow + silent renew** (nicht PKCE+Refresh): ein oeffentlicher
   Extension-Client kann kein Secret halten. `identity.launchWebAuthFlow`, Redirect =
   `identity.getRedirectURL()` (`https://<ext-id>.chromiumapp.org/`), Token in `wxt/storage`.
+- **Extension-ID-Verhalten (Chrome):** unpacked OHNE `key` im Manifest → Zufalls-ID pro
+  Install. Mit gepinntem `key` (`wxt.config.ts`; `.chrome-key.pem` lokal, gitignoriert) →
+  feste, aus dem Schluessel abgeleitete ID (`lmecidnfiiphbljfiphaejhnbkmnjkdi`). Chrome
+  migriert bestehende Install-Records **nie**: Key nachtraeglich ergaenzen/aendern oder
+  von anderem Pfad laden erzeugt einen **zweiten Record mit neuer ID**, der alte bleibt
+  → doppeltes Content-Script (doppelte "Run maintenance"-Buttons) + getrennte Storages
+  (Playlists/Rules/Token sind pro ID). `.pem` nie neu generieren: neuer Schluessel =
+  neue ID = alle Installationen + registrierte Redirect-URIs wertlos, Store-Updates unmoeglich.
+  **Agent-Pflicht:** bei allem, das einen ID-Wechsel ausloesen kann (Manifest-`key`
+  anfassen/regenerieren, Ladepfad wechseln, User laedt Release-Zip neben Dev-Build),
+  den User proaktiv warnen: Duplikat-Record in `chrome://extensions` entfernen, neue
+  Redirect-URI am OAuth-Client registrieren (sonst `redirect_uri_mismatch`), Storage
+  ist ID-spezifisch also Inhalte neu setzen.
 - **MV3-Grenzen:** Content-Scripts duerfen nicht cross-origin an die Data API fetchen und haben
   kein `identity` → Writes/Reads der Kette laufen im **Background-Service-Worker**; Fortschritt
   per Port an den Button. Writes **nur auf eigenen** Playlists (Owner-Check `channels.list mine`).
