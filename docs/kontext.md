@@ -16,6 +16,16 @@ alles was headless verifizierbar ist, ist grün. Es fehlt nur noch der **Live-Te
 mit echtem Google-Login** (nur der User kann das). `web/` (PHP-Panel) und die
 Python-Helfer sind **entfernt** — die Extension ist das Produkt.
 
+### Letzte Session — Rebrand + Cutover (erledigt)
+- Rebrand → **„Playlist Warden for YouTube"** (Manifest/UI/Doku).
+- **`web/` (PHP-Panel) + Python-Helfer gelöscht**; Doku extension-only. Alles committet +
+  gepusht als `1c2362b`.
+- **Repo umbenannt** → `martjn-net/playlist-warden`. **Frischer Klon** liegt unter
+  `/home/arens/git/playlist-warden` (= hier). Der alte Ordner
+  `/home/arens/git/youtube-playlist-manager` kann weg (`rm -rf`).
+- **Vor dem ersten Build im frischen Klon:** `cd extension && npm install`
+  (`node_modules` ist git-ignoriert, also nicht im Klon enthalten).
+
 ## 1. Was gebaut ist — Meilensteine
 
 Plan + Details: **[extension-plan.md](extension-plan.md)** (maßgeblich, enthält
@@ -129,17 +139,17 @@ README/AGENTS/TODO umgestellt. (Historisch war das an den Live-Test gegatet.)
   **Martjn**) ist **kollaborativ**, 2 Contributor × 2 Videos (Owner Martjn + Arbeits-Account
   Avatar `AIdro_lKfCix…`) → Adder-Attribution + Cap live verifizierbar. Öffentliche
   Referenz-Playlist: `PLTwMRo-WlCUs` („Sportpark Styrum").
-- **PHP-Panel OAuth (separat vom Extension-OAuth):** Google-**Web**-Client, Redirect
-  `…/oauth2callback.php`, Login-Konten via `ALLOWED_EMAILS`/`HOSTED_DOMAIN` (deny-by-default).
-  Admin-Mails im Repo-Kontext: `***REMOVED***`, `***REMOVED***`.
-- **Repo:** `martjn-net/youtube-playlist-manager` (privat), lokal
-  `/home/arens/git/youtube-playlist-manager`, Branch `master`. `gh` als `martjn-net` auth.
+- **Admin-/Test-Identitäten:** `***REMOVED***` (Arbeits-Account, Collaborator auf der
+  Test-Playlist) und `***REMOVED***`. (Das PHP-Panel-OAuth ist mit `web/` entfernt;
+  die Extension nutzt `browser.identity.launchWebAuthFlow` gegen einen eigenen Web-Client.)
+- **Repo:** `martjn-net/playlist-warden` (privat; umbenannt von `youtube-playlist-manager`),
+  lokal `/home/arens/git/playlist-warden`, Branch `master`. `gh` als `martjn-net` auth.
 - **Sprachkonvention:** AI-Chat Deutsch; App-/Skript-Ausgaben Englisch; Doku Deutsch;
   Code + Kommentare Englisch. **Keine Bilder im Repo** (git-ignoriert). Keine Stubs.
 
 ## 7. Repo-Struktur (Kurz)
 
-- `extension/` — **das künftige Produkt.** `utils/` (pure Logik + Bindings), `entrypoints/`
+- `extension/` — **das Produkt.** `utils/` (pure Logik + Bindings), `entrypoints/`
   (content, injected, popup, options/ mit Shell + Tab-Komponenten), `tests/` (node --test).
   Verifikation: `npm test` + `npm run check` + `npm run build`. Doku: `extension/README.md`.
 
