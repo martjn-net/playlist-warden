@@ -65,6 +65,19 @@ Konto durchklicken (Erweitert → öffnen), danach laeuft alles still. **Hinweis
 Redirect-URI haengt an der Extension-ID — bei Neuinstallation/neuem Ladepfad aendert
 sie sich und muss erneut im Client registriert werden.
 
+## Testbuilds (GitHub Releases)
+
+Fertige Zips zum manuellen Installieren: [github.com/martjn-net/playlist-warden/releases](https://github.com/martjn-net/playlist-warden/releases)
+→ Zip laden + entpacken → `chrome://extensions` → Developer mode → „Load unpacked".
+Die Extension-ID ist per **Public-Key gepinnt** (`wxt.config.ts`,
+`lmecidnfiiphbljfiphaejhnbkmnjkdi`) — jeder Tester bekommt dieselbe ID und damit
+dieselbe OAuth-Redirect-URI; der private `.pem`-Schluessel ist gitignoriert.
+Neuer Build: `npm test && npm run check && npm run build && npm run zip`, dann
+`gh release create v<X.Y.Z> .output/playlist-warden-<X.Y.Z>-chrome.zip`.
+**Achtung Testuser:** solange der Consent Screen im Testing-Modus ist, koennen sich
+nur eingetragene Testnutzer einloggen (Limitierung Googles, nicht der Extension);
+fremde Tester werden sonst mit „Zugriff blockiert" abgelehnt.
+
 ## Entwicklung
 ```bash
 npm install            # installiert WXT + führt `wxt prepare` aus
