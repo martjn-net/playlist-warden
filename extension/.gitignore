@@ -3,4 +3,5 @@ node_modules/
 .wxt/
 stats.html
 *.zip
+*.pem
 web-ext-artifacts/
