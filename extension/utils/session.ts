@@ -16,18 +16,14 @@ import { storage } from 'wxt/utils/storage';
 
 import { buildAuthUrl, isExpired, parseTokenFromRedirect, YT_SCOPE } from './auth.ts';
 
-const clientIdItem = storage.defineItem<string>('local:googleClientId', { fallback: '', version: 1 });
+// Built-in OAuth client id (Web application client of the playlist-warden GCP
+// project). A client id is NOT a secret; the implicit flow needs no client secret.
+export const CLIENT_ID = '1013303977822-5t191aisdfpf2rov6ni2f70o49pbtj4j.apps.googleusercontent.com';
+
 const tokenItem = storage.defineItem<{ accessToken: string; expiry: number } | null>('local:ytToken', {
   fallback: null,
   version: 1,
 });
-
-export async function getClientId(): Promise<string> {
-  return clientIdItem.getValue();
-}
-export async function setClientId(id: string): Promise<void> {
-  await clientIdItem.setValue(id.trim());
-}
 
 function randomState(): string {
   const bytes = new Uint8Array(16);
@@ -40,12 +36,9 @@ function randomState(): string {
  * @returns the access token, or null if cancelled/failed.
  */
 export async function signIn(interactive = true): Promise<string | null> {
-  const clientId = await clientIdItem.getValue();
-  if (!clientId) throw new Error('No Google client id configured (set it in Options).');
-
   const redirectUri = browser.identity.getRedirectURL();
   const state = randomState();
-  const url = buildAuthUrl({ clientId, redirectUri, scope: YT_SCOPE, state });
+  const url = buildAuthUrl({ clientId: CLIENT_ID, redirectUri, scope: YT_SCOPE, state });
 
   let redirect: string | undefined;
   try {
@@ -80,6 +73,3 @@ export async function signOut(): Promise<void> {
   await tokenItem.setValue(null);
 }
 
-export function redirectUri(): string {
-  return browser.identity.getRedirectURL();
-}

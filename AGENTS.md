@@ -34,10 +34,11 @@ extension/
   entrypoints/content.ts     Playlist-Seite: "Run maintenance"-Button, capture + Kette anstossen + Narration
   entrypoints/injected.ts    MAIN-World-Reader (ytInitialData)
   entrypoints/popup/         Kurzanleitung + "Open options"
-  entrypoints/options/       Options-Page (Svelte 5): App.svelte (Shell) + Tabs Playlists/Rules/Log/Settings
+  entrypoints/options/       Options-Page (Svelte 5): App.svelte (Shell) + Tabs Playlists/Rules/Log/Login
   tests/                     node --test (coerce, adders, schema/store, checks-parity, yt/auth/overview)
 docs/extension-plan.md     Plan/Architektur/Meilensteine M1–M5
 docs/kontext.md            Kontext-/Uebergabestand (bei Sessionwechsel zuerst lesen)
+docs/oauth-verifizierung.md OAuth-„nicht überprüft"-Screen: Optionen A–D, Entscheidung (Personal use)
 README.md, AGENTS.md, CLAUDE.md(Symlink->AGENTS.md)
 ```
 

@@ -29,11 +29,11 @@ SPA-Navigation sofort neu). Ein Klick startet die
 Schritte 2–5 laufen im **Background-Service-Worker** (MV3: Content-Scripts dürfen
 nicht cross-origin an die Data API und haben kein `identity`); der Fortschritt wird
 per Port an den Button gestreamt. Jede Löschung/Reorder wird ins **Log** geschrieben.
-Voraussetzung: Owner der Playlist + eingeloggt (siehe Settings).
+Voraussetzung: Owner der Playlist + eingeloggt (siehe Tab **Login**).
 
 Die **Options-Page** (Icon → „Open options") ist reine Verwaltung — **keine Trigger**:
 **Playlists** (Cap/Shuffle je Playlist), **Rules** (Content-Regeln), **Log**
-(Audit + Jobs) und **Settings** (Google-Sign-in + Client-ID). Alles bleibt lokal.
+(Audit + Jobs) und **Login** (Google-Sign-in; Client-ID ist eingebaut). Alles bleibt lokal.
 
 ## Aufbau
 - `utils/adders.ts` — reine Adder-Extraktion (Port aus `../check_playlist_web.py`), unit-getestet.
@@ -49,16 +49,21 @@ Die **Options-Page** (Icon → „Open options") ist reine Verwaltung — **kein
 - `entrypoints/content.ts` — Content-Script: „Run maintenance"-Button, capturet + treibt die Kette, erzählt Fortschritt.
 - `entrypoints/background.ts` — Service-Worker: führt die Kette aus (Data-API-Writes), streamt Fortschritt per Port.
 - `entrypoints/options/` — Options-Page (Svelte 5): `App.svelte` (Shell/Tab-Routing) + je Tab
-  eine Komponente (`PlaylistsTab`, `RulesTab`, `LogTab`, `SettingsTab`).
+  eine Komponente (`PlaylistsTab`, `RulesTab`, `LogTab`, `LoginTab`).
 - `entrypoints/popup/` — Kurzanleitung + „Open options".
 
 Permissions: `*://www.youtube.com/*` (Adder-Read) + `https://www.googleapis.com/*`
 (Data API) + `storage` (Store/Token) + `identity` (OAuth).
 
-**Setup fürs Live-Testen:** in der Google Cloud Console einen **OAuth-Client „Web
-application"** anlegen, die im **Settings-Tab** angezeigte **Redirect-URI**
-(`https://<extension-id>.chromiumapp.org/`) als *Authorized redirect URI* eintragen,
-die **Client-ID** im Settings-Tab speichern und „Sign in with Google" klicken.
+**Setup fürs Live-Testen:** am eingebauten **OAuth-Client** (Google Cloud Console →
+Credentials) die **Redirect-URI** `https://<extension-id>.chromiumapp.org/` als
+*Authorized redirect URI* eintragen; Extension-ID siehe `chrome://extensions`. Die
+Client-ID ist fest in `utils/session.ts` verdrahtet (kein Secret — im impliziten Flow
+nicht nötig/möglich). Sign-in öffnet der „Run maintenance"-Button bei Bedarf direkt
+(oder Tab **Login**); den Screen „Google hat diese App nicht überprüft" einmal pro
+Konto durchklicken (Erweitert → öffnen), danach laeuft alles still. **Hinweis:** die
+Redirect-URI haengt an der Extension-ID — bei Neuinstallation/neuem Ladepfad aendert
+sie sich und muss erneut im Client registriert werden.
 
 ## Entwicklung
 ```bash

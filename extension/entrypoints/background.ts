@@ -26,9 +26,15 @@ async function runPipeline(playlistId: string, port: { postMessage(message: unkn
 
   try {
     send('checks', 'Signing in…');
-    const token = await session.getToken();
+    let token = await session.getToken();
     if (!token) {
-      send('error', 'Not signed in — open Options → Settings and sign in');
+      // No stored/silently-renewable session — open the Google consent window
+      // right away instead of sending the user off to the Options page.
+      send('checks', 'Opening Google sign-in…');
+      token = await session.signIn(true);
+    }
+    if (!token) {
+      send('error', 'Sign-in cancelled');
       return;
     }
 

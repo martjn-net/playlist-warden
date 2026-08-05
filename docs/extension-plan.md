@@ -179,8 +179,8 @@ Präzisierungen (in die Umsetzung aufnehmen):
   Adder + stößt `background.ts` (Service-Worker) an, der **Checks → Cap → Prune →
   Shuffle** ausführt (Data-API) und Fortschritt per Port (`utils/messages.ts`) an den
   Button streamt (MV3: Content-Script darf nicht cross-origin fetchen / kein `identity`).
-  **Overview-Tab → Settings** (nur Google-Sign-in, keine Trigger); Tabs jetzt
-  Playlists · Rules · Log · Settings. „N adders" → distinct Contributor + „attributed".
+  **Overview-Tab → Login** (nur Google-Sign-in, keine Trigger); Tabs jetzt
+  Playlists · Rules · Log · Login. „N adders" → distinct Contributor + „attributed".
   38/38 TS-Tests grün, svelte-check 0/0, beide Builds grün. Live-Kette = dein Test.
 - **Offen (dein Schritt):** Google-Web-Client + Redirect-URIs anlegen, Live-Sign-in +
   echte Reads/Writes testen; Safari-Build (Mac).

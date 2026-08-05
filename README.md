@@ -66,8 +66,9 @@ npm run build:firefox  # Firefox-Build -> .output/firefox-mv2
 
 ## Live-Setup (Google-OAuth)
 
-Einmalig: in der Google Cloud Console einen **OAuth-Client „Web application"** anlegen,
-die im **Settings-Tab** angezeigte Redirect-URI (`https://<extension-id>.chromiumapp.org/`)
-als *Authorized redirect URI* eintragen, Client-ID im Settings-Tab speichern, „Sign in
-with Google". Danach läuft die Wartungs-Kette auf eigenen Playlists. Details:
+Einmalig: am eingebauten **OAuth-Client** (Google Cloud Console) die **Redirect-URI**
+`https://<extension-id>.chromiumapp.org/` (Extension-ID siehe `chrome://extensions`)
+als *Authorized redirect URI* eintragen und den Login-Account als Testnutzer hinterlegen.
+Sign-in öffnet der „Run maintenance"-Button bei Bedarf von selbst (oder Tab **Login**).
+Danach läuft die Wartungs-Kette auf eigenen Playlists. Details:
 [extension/README.md](extension/README.md).

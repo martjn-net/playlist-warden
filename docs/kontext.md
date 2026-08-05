@@ -53,7 +53,8 @@ Status + bestätigte Entscheidungen). Kurzfassung:
   Scripts dürfen nicht cross-origin fetchen und haben kein `identity`. Owner-gegatet,
   jede Aktion ins Audit/Job-Log. **Confirm-Dialog** vor den Writes.
 - **Options-Page = reine Verwaltung, KEINE Trigger:** Tabs **Playlists · Rules · Log ·
-  Settings**. „Overview" wurde zu **Settings** (nur Google-Sign-in + Client-ID).
+  Login**. „Overview" wurde zuerst Settings, jetzt **Login** (nur Sign-in/out;
+  Client-ID eingebaut, kein Eingabefeld mehr).
 - **Zähl-Fix:** „adders" (= Videos) war irreführend → zeigt jetzt **distinct
   Contributor** (+ „N videos attributed"). `adderMap` = Video→Avatar (Cap-Basis).
 
@@ -86,18 +87,22 @@ Im `extension/`:
 - `npm run zip` / `npm run zip:firefox` → ZIPs in `.output/` (~38 kB).
 - Parity-Tests decken die Check-/Plan-Logik ab (Referenz war die inzwischen entfernte PHP-Suite `web/tests/run.php`); die TS-Tests sind eigenständig.
 - UI-Smoke (headless, static server auf `.output/chrome-mv3` + Browser): Options-Page
-  mountet, Tabs **Playlists · Rules · Log · Settings** rendern + schalten. **Kette
+  mountet, Tabs **Playlists · Rules · Log · Login** rendern + schalten. **Kette
   (content→background), Live-OAuth/API + datenabhängige Inhalte brauchen die echte
   Extension-Runtime → nicht headless testbar.**
 
 ## 4. Nächste Schritte — DA MORGEN WEITERMACHEN
 
 **A) Live-Verifikation (nur der User, nicht headless möglich):**
-1. Google Cloud Console → **OAuth-Client „Web application"** anlegen.
-2. Im **Settings-Tab** angezeigte **Redirect-URI** (`https://<extension-id>.chromiumapp.org/`)
-   als *Authorized redirect URI* eintragen. Scope ist `.../auth/youtube`.
-3. Extension laden (Chrome: entpackt aus `.output/chrome-mv3`; Firefox: `about:debugging`),
-   im **Settings-Tab** **Client-ID speichern** → „Sign in with Google".
+1. Google Cloud Console → am eingebauten **OAuth-Client** (Client-ID fest in
+   `utils/session.ts`) die **Redirect-URI** `https://<extension-id>.chromiumapp.org/`
+   eintragen (Extension-ID siehe `chrome://extensions`). Scope: `.../auth/youtube`;
+   Testnutzer = das Login-Konto.
+2. Extension laden (Chrome: entpackt aus `.output/chrome-mv3`; Firefox: `about:debugging`).
+3. Sign-in kommt von allein: bei fehlendem Token öffnet „Run maintenance" direkt das
+   Google-Fenster (alternativ Tab **Login**). „Google hat diese App nicht überprüft"
+   einmal pro Konto durchklicken (Erweitert → öffnen) — danach merkt Google die
+   Einwilligung und alles läuft still. Details/Entscheidung: [docs/oauth-verifizierung.md](oauth-verifizierung.md).
 4. Als **Owner** auf eigener Playlist (z. B. `PLDdaIFxMU8v4`, Cap in Playlists setzen)
    den **„Run maintenance"**-Button klicken → Kette läuft, Button erzählt, Log füllt sich.
 5. Safari-Build nur auf macOS (`npm run build:safari` → `xcrun safari-web-extension-converter`).

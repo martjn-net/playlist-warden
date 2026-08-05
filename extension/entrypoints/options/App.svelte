@@ -4,11 +4,11 @@
   import { store } from '@/utils/store.ts';
   import type { StoreData } from '@/utils/schema.ts';
   import LogTab from './LogTab.svelte';
-  import SettingsTab from './SettingsTab.svelte';
+  import LoginTab from './LoginTab.svelte';
   import PlaylistsTab from './PlaylistsTab.svelte';
   import RulesTab from './RulesTab.svelte';
 
-  type Tab = 'settings' | 'playlists' | 'rules' | 'log';
+  type Tab = 'login' | 'playlists' | 'rules' | 'log';
 
   let tab = $state<Tab>('playlists');
   let data = $state<StoreData | null>(null);
@@ -40,7 +40,7 @@
     <button class:active={tab === 'playlists'} onclick={() => (tab = 'playlists')}>Playlists</button>
     <button class:active={tab === 'rules'} onclick={() => (tab = 'rules')}>Rules</button>
     <button class:active={tab === 'log'} onclick={() => (tab = 'log')}>Log</button>
-    <button class:active={tab === 'settings'} onclick={() => (tab = 'settings')}>Settings</button>
+    <button class:active={tab === 'login'} onclick={() => (tab = 'login')}>Login</button>
   </div>
 
   {#if !data}
@@ -51,8 +51,8 @@
     <RulesTab {data} {reload} {flash} bind:selectedPid />
   {:else if tab === 'log'}
     <LogTab {data} />
-  {:else if tab === 'settings'}
-    <SettingsTab {flash} />
+  {:else if tab === 'login'}
+    <LoginTab {flash} />
   {/if}
 </div>
 
