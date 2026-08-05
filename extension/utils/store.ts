@@ -34,6 +34,8 @@ const adderMapItem = storage.defineItem<Record<string, Record<string, string>>>(
 });
 const auditItem = storage.defineItem<AuditEntry[]>('local:audit', { fallback: [], version: 1 });
 const jobsItem = storage.defineItem<Job[]>('local:jobs', { fallback: [], version: 1 });
+// Auto-pilot: playlistId -> last notification timestamp (ms), prevents re-alert spam.
+const autoNotifyItem = storage.defineItem<Record<string, number>>('local:autoNotify', { fallback: {}, version: 1 });
 
 const AUDIT_CAP = 500; // keep the newest N entries
 const JOB_CAP = 200;
@@ -58,24 +60,28 @@ export const store = {
       privacy: patch.privacy ?? prev?.privacy ?? '',
       cap: patch.cap ?? prev?.cap ?? 0,
       shuffle: patch.shuffle ?? prev?.shuffle ?? false,
+      autoIntervalDays: patch.autoIntervalDays ?? prev?.autoIntervalDays ?? 0,
       updatedAt: nowIso(),
     };
     await playlistsItem.setValue(all);
   },
 
   async removePlaylist(id: string): Promise<void> {
-    const [pl, rl, am] = await Promise.all([
+    const [pl, rl, am, an] = await Promise.all([
       playlistsItem.getValue(),
       rulesItem.getValue(),
       adderMapItem.getValue(),
+      autoNotifyItem.getValue(),
     ]);
     delete pl[id];
     delete rl[id];
     delete am[id];
+    delete an[id];
     await Promise.all([
       playlistsItem.setValue(pl),
       rulesItem.setValue(rl),
       adderMapItem.setValue(am),
+      autoNotifyItem.setValue(an),
     ]);
   },
 
@@ -134,6 +140,18 @@ export const store = {
       Object.assign(current, patch, { id: current.id });
       await jobsItem.setValue(all);
     }
+  },
+
+  // --- auto-pilot notify state -------------------------------------------------
+  async getAutoNotify(): Promise<Record<string, number>> {
+    return autoNotifyItem.getValue();
+  },
+
+  async markAutoNotified(ids: string[], at: number): Promise<void> {
+    if (ids.length === 0) return;
+    const m = await autoNotifyItem.getValue();
+    for (const id of ids) m[id] = at;
+    await autoNotifyItem.setValue(m);
   },
 
   // --- bulk read (for the options UI) ---------------------------------------

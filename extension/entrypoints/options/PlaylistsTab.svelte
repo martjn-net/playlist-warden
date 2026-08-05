@@ -44,6 +44,7 @@
       privacy: p.privacy,
       cap: Number(p.cap) || 0,
       shuffle: p.shuffle,
+      autoIntervalDays: Number(p.autoIntervalDays) || 0,
     });
     flash('Saved ' + p.id);
   }
@@ -95,6 +96,11 @@
       <input type="checkbox" bind:checked={p.shuffle} />
       <span>Shuffle on “Run maintenance”</span>
     </label>
+    <div class="row" style="margin-top:10px;gap:6px;align-items:center">
+      <span>Auto-pilot: notify when no maintenance for</span>
+      <input type="number" min="0" style="width:70px" bind:value={p.autoIntervalDays} />
+      <span>day(s) — 0 = off</span>
+    </div>
     <div class="row" style="margin-top:10px">
       <button class="btn" onclick={() => savePlaylist(p)}>Save</button>
       <button class="btn danger" onclick={() => removePlaylist(p.id)}>Remove</button>

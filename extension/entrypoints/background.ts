@@ -8,6 +8,7 @@ import * as yt from '@/utils/yt';
 import { computeOverview } from '@/utils/overview';
 import { planCap, planShuffle, prunePlanRemovals } from '@/utils/checks';
 import { RUN_PORT, type RunPhase } from '@/utils/messages';
+import { dueForNotification, lastRunByPlaylist } from '@/utils/autopilot';
 
 /**
  * Runs the maintenance chain for one playlist and streams progress back over
@@ -15,10 +16,10 @@ import { RUN_PORT, type RunPhase } from '@/utils/messages';
  * → shuffle (reorder what's left). Shuffle is last so the final order is clean.
  * Every write is authenticated with the signed-in user's OAuth token and logged.
  */
-async function runPipeline(playlistId: string, port: { postMessage(message: unknown): void }): Promise<void> {
+async function runPipeline(playlistId: string, port?: { postMessage(message: unknown): void }): Promise<void> {
   const send = (phase: RunPhase, text: string): void => {
     try {
-      port.postMessage({ phase, text });
+      port?.postMessage({ phase, text });
     } catch {
       /* port closed */
     }
@@ -134,7 +135,60 @@ async function runPipeline(playlistId: string, port: { postMessage(message: unkn
   }
 }
 
+// --- auto-pilot ---------------------------------------------------------------
+
+const AUTOPILOT_ALARM = 'ytpl-autopilot';
+
+/** Hourly tick: notify for every playlist whose maintenance interval elapsed. */
+async function autoPilotTick(): Promise<void> {
+  const [playlists, jobs, notified] = await Promise.all([
+    store.getPlaylists(),
+    store.getJobs(),
+    store.getAutoNotify(),
+  ]);
+  const due = dueForNotification(playlists, lastRunByPlaylist(jobs, playlists), notified, Date.now());
+  if (due.length === 0) return;
+  await store.markAutoNotified(
+    due.map((d) => d.id),
+    Date.now(),
+  );
+  for (const d of due) {
+    await browser.notifications.create(`ytpl-due-${d.id}`, {
+      type: 'basic',
+      iconUrl: 'icons/icon-128.png',
+      title: 'Playlist maintenance due',
+      message: `"${d.title || d.id}" — no maintenance for ${d.daysSinceRun} day(s).`,
+      buttons: [{ title: 'Run maintenance' }, { title: 'Open playlist' }],
+      priority: 1,
+    });
+  }
+}
+
+/** Run the chain without a page port; report the outcome as a notification. */
+async function runPipelineHeadless(playlistId: string): Promise<void> {
+  const sink: { last: string; postMessage(m: unknown): void } = {
+    last: '',
+    postMessage(m: unknown) {
+      if (isRecord(m) && typeof m.text === 'string') this.last = m.text;
+    },
+  };
+  await runPipeline(playlistId, sink);
+  await browser.notifications.create(`ytpl-done-${playlistId}`, {
+    type: 'basic',
+    iconUrl: 'icons/icon-128.png',
+    title: 'Playlist maintenance',
+    message: sink.last || 'finished',
+    priority: 0,
+  });
+}
+
+function openPlaylist(playlistId: string): Promise<unknown> {
+  return browser.tabs.create({ url: `https://www.youtube.com/playlist?list=${playlistId}` });
+}
+
 export default defineBackground(() => {
+  void browser.alarms.create(AUTOPILOT_ALARM, { periodInMinutes: 60 });
+
   browser.runtime.onConnect.addListener((port) => {
     if (port.name !== RUN_PORT) return;
     port.onMessage.addListener((msg: unknown) => {
@@ -142,5 +196,23 @@ export default defineBackground(() => {
         void runPipeline(msg.playlistId, port);
       }
     });
+  });
+
+  browser.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === AUTOPILOT_ALARM) void autoPilotTick();
+  });
+
+  browser.notifications.onClicked.addListener((notifId) => {
+    void browser.notifications.clear(notifId);
+    const pid = notifId.replace(/^ytpl-(due|done)-/, '');
+    if (pid !== notifId) void openPlaylist(pid);
+  });
+
+  browser.notifications.onButtonClicked.addListener((notifId, buttonIndex) => {
+    void browser.notifications.clear(notifId);
+    const pid = notifId.replace(/^ytpl-due-/, '');
+    if (pid === notifId) return;
+    if (buttonIndex === 0) void runPipelineHeadless(pid);
+    else void openPlaylist(pid);
   });
 });

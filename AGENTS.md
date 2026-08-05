@@ -25,6 +25,7 @@ extension/
   utils/checks.ts         Pure Check-/Plan-Logik (dead/dupes/content/cap/shuffle/prune), parity-getestet
   utils/overview.ts       Pure Compose: alle Checks + Cap/Prune-Plaene
   utils/yt.ts             Data-API-v3-Client (token-only): reads/writes/owner-check/paging + Shaping
+  utils/autopilot.ts      Pure Faelligkeits-Logik (Auto-Pilot: Intervall/Anker/Dedupe), unit-getestet
   utils/auth.ts           Pure OAuth-Helfer (Auth-URL, Token-Parse, Expiry)
   utils/session.ts        Sign-in-Binding (identity.launchWebAuthFlow, Token in wxt/storage)
   utils/adders.ts         Adder-Extraktion aus ytInitialData (Avatar-Overlay), unit-getestet

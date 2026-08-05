@@ -45,6 +45,7 @@ export interface PlaylistMeta {
   privacy: string; // 'public' | 'unlisted' | 'private' | ''
   cap: number; // cap_per_contributor, 0 = no cap
   shuffle: boolean;
+  autoIntervalDays: number; // auto-pilot: notify when the last run is older; 0 = off
   updatedAt: string;
 }
 
@@ -120,6 +121,7 @@ export function normalizePlaylist(raw: unknown, fallbackId = ''): PlaylistMeta |
     privacy: toStr(r.privacy),
     cap: toInt(r.cap),
     shuffle: toBool(r.shuffle, false),
+    autoIntervalDays: toInt(r.autoIntervalDays),
     updatedAt: toStr(r.updatedAt),
   };
 }

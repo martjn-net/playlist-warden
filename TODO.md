@@ -43,3 +43,8 @@
 - **Öffentlichkeit:** Repo public (Historie vorher auf Secrets/Firmen-Adressen
   gescannt), **GitHub Release v0.1.0** mit Chrome-Testbuild, Extension-ID per
   Public-Key gepinnt, Release-Rezept + Hygiene-Regeln in AGENTS.md.
+- **Auto-Pilot:** geplante Wartung via `chrome.alarms` (stündlicher Tick) —
+  Notification, wenn die letzte Wartung einer Liste älter ist als deren
+  einstellbares Intervall (`autoIntervalDays`, pro Playlist, 0=aus); Buttons
+  „Run maintenance" (headless-Lauf im Hintergrund) / „Open playlist";
+  Re-Alert-Dedupe pro Intervall; Titel-Fetch beim Add (`yt.playlistMeta`).

@@ -37,7 +37,8 @@ test('normalizePlaylist requires an id and coerces fields', () => {
   assert.equal(normalizePlaylist({}), null);
   assert.equal(normalizePlaylist('x'), null);
   const p = normalizePlaylist({ title: 'Mix', cap: '2', shuffle: 1 }, 'PL123');
-  assert.deepEqual(p, { id: 'PL123', title: 'Mix', privacy: '', cap: 2, shuffle: true, updatedAt: '' });
+  assert.deepEqual(p, { id: 'PL123', title: 'Mix', privacy: '', cap: 2, shuffle: true, autoIntervalDays: 0, updatedAt: '' });
+  assert.equal(normalizePlaylist({ id: 'PLx', autoIntervalDays: '7' })?.autoIntervalDays, 7);
   // explicit id wins over fallback
   assert.equal(normalizePlaylist({ id: 'PLself' }, 'PLfallback')?.id, 'PLself');
 });

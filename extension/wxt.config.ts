@@ -16,7 +16,7 @@ export default defineConfig({
     description: 'Fair caps, cleanup & shuffle for shared/collaborative YouTube playlists.',
     // `identity` drives the cross-browser OAuth flow (launchWebAuthFlow);
     // `storage` holds the local store + token. googleapis host = Data API reads/writes.
-    permissions: ['storage', 'identity'],
+    permissions: ['storage', 'identity', 'alarms', 'notifications'],
     host_permissions: ['*://www.youtube.com/*', 'https://www.googleapis.com/*'],
     // injected.js runs in the page's MAIN world via injectScript() -> must be
     // web-accessible. WXT downlevels this to the MV2 array form for Firefox.
